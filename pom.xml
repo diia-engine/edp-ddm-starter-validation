@@ -26,6 +26,7 @@
     <feign-annotation-error-decoder.version>1.4.0</feign-annotation-error-decoder.version>
     <wiremock.version>2.27.2</wiremock.version>
     <spring.cloud.version>2021.0.0</spring.cloud.version>
+    <jackson-databind.version>2.13.4</jackson-databind.version>
     <ddm-form-validation-client.version>1.8.0.2</ddm-form-validation-client.version>
 
     <sonar.coverage.exclusions>
@@ -55,6 +56,11 @@
 		    <artifactId>log4j-core</artifactId>
 		    <version>${log4j.version}</version>
 	    </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>${jackson-databind.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
