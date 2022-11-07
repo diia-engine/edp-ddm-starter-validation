@@ -18,29 +18,18 @@ package com.epam.digital.data.platform.starter.validation.service.impl;
 
 import com.epam.digital.data.platform.integration.formprovider.client.FormValidationClient;
 import com.epam.digital.data.platform.integration.formprovider.dto.FormDataValidationDto;
-import com.epam.digital.data.platform.integration.formprovider.dto.FormErrorDetailDto;
-import com.epam.digital.data.platform.integration.formprovider.dto.FormErrorListDto;
-import com.epam.digital.data.platform.integration.formprovider.exception.FormValidationException;
-import com.epam.digital.data.platform.starter.errorhandling.dto.ValidationErrorDto;
+import com.epam.digital.data.platform.integration.formprovider.exception.SubmissionValidationException;
 import com.epam.digital.data.platform.starter.validation.dto.FormValidationResponseDto;
-import com.epam.digital.data.platform.starter.validation.mapper.FormValidationErrorMapper;
 import com.epam.digital.data.platform.starter.validation.service.FormValidationService;
 import com.epam.digital.data.platform.storage.form.dto.FormDataDto;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class FormValidationServiceImpl implements FormValidationService {
 
-  private static final String TRACE_ID_KEY = "X-B3-TraceId";
-
   private final FormValidationClient client;
-  private final FormValidationErrorMapper errorMapper;
 
   @Override
   public FormValidationResponseDto validateForm(String formId, FormDataDto formDataDto) {
@@ -48,20 +37,8 @@ public class FormValidationServiceImpl implements FormValidationService {
     try {
       client.validateFormData(formId, formDataValidationDto);
       return FormValidationResponseDto.builder().isValid(true).build();
-    } catch (FormValidationException ex) {
-      var errorsInvalidFileType = new HashSet<>(ex.getErrors().getErrors());
-      return createFailedValidationResponse(errorsInvalidFileType);
+    } catch (SubmissionValidationException ex) {
+      return FormValidationResponseDto.builder().isValid(false).error(ex.getErrors()).build();
     }
-  }
-
-  private FormValidationResponseDto createFailedValidationResponse(Set<FormErrorDetailDto> err) {
-    var errorsListDto = errorMapper.toErrorListDto(new FormErrorListDto(List.copyOf(err)));
-    var error = ValidationErrorDto.builder()
-        .traceId(MDC.get(TRACE_ID_KEY))
-        .code("FORM_VALIDATION_ERROR")
-        .message("Form validation error")
-        .details(errorsListDto)
-        .build();
-    return FormValidationResponseDto.builder().isValid(false).error(error).build();
   }
 }

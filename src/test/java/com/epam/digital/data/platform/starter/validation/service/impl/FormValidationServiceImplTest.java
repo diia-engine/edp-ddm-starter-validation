@@ -20,17 +20,13 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
 
 import com.epam.digital.data.platform.integration.formprovider.client.FormValidationClient;
-import com.epam.digital.data.platform.integration.formprovider.dto.FormErrorDetailDto;
-import com.epam.digital.data.platform.integration.formprovider.dto.FormErrorListDto;
-import com.epam.digital.data.platform.integration.formprovider.exception.FormValidationException;
+import com.epam.digital.data.platform.integration.formprovider.exception.SubmissionValidationException;
 import com.epam.digital.data.platform.starter.errorhandling.dto.ErrorDetailDto;
 import com.epam.digital.data.platform.starter.errorhandling.dto.ErrorsListDto;
-import com.epam.digital.data.platform.starter.validation.mapper.FormValidationErrorMapper;
+import com.epam.digital.data.platform.starter.errorhandling.dto.ValidationErrorDto;
 import com.epam.digital.data.platform.storage.form.dto.FormDataDto;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.LinkedHashMap;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -44,10 +40,6 @@ public class FormValidationServiceImplTest {
 
   @Mock
   private FormValidationClient client;
-  @Mock
-  private FormValidationErrorMapper errorMapper;
-  @Mock
-  private ObjectMapper objectMapper;
   @InjectMocks
   private FormValidationServiceImpl formValidationService;
 
@@ -56,15 +48,14 @@ public class FormValidationServiceImplTest {
     var message = "ValidationError";
     var field = "name";
     var value = "123";
-    var formErrorDetailDto = new FormErrorDetailDto(message, field, value);
     var errorDetailDto = new ErrorDetailDto(message, field, value);
-    var formErrorListDto = new FormErrorListDto(List.of(formErrorDetailDto));
-    var errorsListDto = new ErrorsListDto(List.of(errorDetailDto));
+    var errorListDto = new ErrorsListDto(List.of(errorDetailDto));
+    var validationErrorDto = new ValidationErrorDto("traceId", "VALIDATION_ERROR", message,
+        errorListDto);
     var formId = "testFormId";
     var formDataDto = FormDataDto.builder().data(new LinkedHashMap<>()).build();
-    doThrow(new FormValidationException(formErrorListDto)).when(client)
+    doThrow(new SubmissionValidationException(validationErrorDto)).when(client)
         .validateFormData(eq(formId), any());
-    when(errorMapper.toErrorListDto(formErrorListDto)).thenReturn(errorsListDto);
 
     var formValidationResponseDto = formValidationService.validateForm(formId, formDataDto);
 
@@ -81,17 +72,16 @@ public class FormValidationServiceImplTest {
 
   @Test
   public void testFormDataValidationWithInvalidData2() {
-    var formErrorDetailDto = new FormErrorDetailDto("ValidationError2", "name", "321");
-    var formErrorDetailDto2 = new FormErrorDetailDto("ValidationError3", "fileName", "543");
-    var formErrorListDto = new FormErrorListDto(
-        List.of(formErrorDetailDto, formErrorDetailDto2));
+    var formErrorDetailDto = new ErrorDetailDto("ValidationError2", "name", "321");
+    var formErrorDetailDto2 = new ErrorDetailDto("ValidationError3", "fileName", "543");
     var formId = "testFormId";
     var formDataDto = FormDataDto.builder().data(new LinkedHashMap<>()).build();
-    var errorDetailDto = new ErrorDetailDto("ValidationError", "name", "321");
-    var errorsListDto = new ErrorsListDto(List.of(errorDetailDto));
-    doThrow(new FormValidationException(formErrorListDto)).when(client)
+
+    var errorListDto = new ErrorsListDto(List.of(formErrorDetailDto, formErrorDetailDto2));
+    var validationErrorDto = new ValidationErrorDto("traceId", "FORM_VALIDATION_ERROR", "message",
+        errorListDto);
+    doThrow(new SubmissionValidationException(validationErrorDto)).when(client)
         .validateFormData(eq(formId), any());
-    when(errorMapper.toErrorListDto(any())).thenReturn(errorsListDto);
 
     var formValidationResponseDto = formValidationService.validateForm(formId, formDataDto);
 
@@ -99,5 +89,13 @@ public class FormValidationServiceImplTest {
     assertThat(formValidationResponseDto.isValid()).isFalse();
     assertThat(formValidationResponseDto.getError().getDetails().getErrors().get(0).getField())
         .isEqualTo("name");
+  }
+
+  @Test
+  public void happyPath() {
+    var formValidationResponseDto = formValidationService.validateForm("formId",
+        FormDataDto.builder().data(new LinkedHashMap<>()).build());
+
+    assertThat(formValidationResponseDto.isValid()).isTrue();
   }
 }
