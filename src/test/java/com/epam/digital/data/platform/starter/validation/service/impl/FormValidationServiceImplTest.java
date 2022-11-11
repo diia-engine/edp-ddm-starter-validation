@@ -22,11 +22,11 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 
 import com.epam.digital.data.platform.integration.formprovider.client.FormValidationClient;
+import com.epam.digital.data.platform.integration.formprovider.dto.FormDataValidationDto;
 import com.epam.digital.data.platform.integration.formprovider.exception.SubmissionValidationException;
 import com.epam.digital.data.platform.starter.errorhandling.dto.ErrorDetailDto;
 import com.epam.digital.data.platform.starter.errorhandling.dto.ErrorsListDto;
 import com.epam.digital.data.platform.starter.errorhandling.dto.ValidationErrorDto;
-import com.epam.digital.data.platform.storage.form.dto.FormDataDto;
 import java.util.LinkedHashMap;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -53,11 +53,11 @@ public class FormValidationServiceImplTest {
     var validationErrorDto = new ValidationErrorDto("traceId", "VALIDATION_ERROR", message,
         errorListDto);
     var formId = "testFormId";
-    var formDataDto = FormDataDto.builder().data(new LinkedHashMap<>()).build();
+    var formDataValidationDto = FormDataValidationDto.builder().data(new LinkedHashMap<>()).build();
     doThrow(new SubmissionValidationException(validationErrorDto)).when(client)
         .validateFormData(eq(formId), any());
 
-    var formValidationResponseDto = formValidationService.validateForm(formId, formDataDto);
+    var formValidationResponseDto = formValidationService.validateForm(formId, formDataValidationDto);
 
     assertThat(formValidationResponseDto).isNotNull();
     assertThat(formValidationResponseDto.isValid()).isFalse();
@@ -75,7 +75,7 @@ public class FormValidationServiceImplTest {
     var formErrorDetailDto = new ErrorDetailDto("ValidationError2", "name", "321");
     var formErrorDetailDto2 = new ErrorDetailDto("ValidationError3", "fileName", "543");
     var formId = "testFormId";
-    var formDataDto = FormDataDto.builder().data(new LinkedHashMap<>()).build();
+    var formDataValidationDto = FormDataValidationDto.builder().data(new LinkedHashMap<>()).build();
 
     var errorListDto = new ErrorsListDto(List.of(formErrorDetailDto, formErrorDetailDto2));
     var validationErrorDto = new ValidationErrorDto("traceId", "FORM_VALIDATION_ERROR", "message",
@@ -83,7 +83,7 @@ public class FormValidationServiceImplTest {
     doThrow(new SubmissionValidationException(validationErrorDto)).when(client)
         .validateFormData(eq(formId), any());
 
-    var formValidationResponseDto = formValidationService.validateForm(formId, formDataDto);
+    var formValidationResponseDto = formValidationService.validateForm(formId, formDataValidationDto);
 
     assertThat(formValidationResponseDto).isNotNull();
     assertThat(formValidationResponseDto.isValid()).isFalse();
@@ -94,7 +94,7 @@ public class FormValidationServiceImplTest {
   @Test
   public void happyPath() {
     var formValidationResponseDto = formValidationService.validateForm("formId",
-        FormDataDto.builder().data(new LinkedHashMap<>()).build());
+        FormDataValidationDto.builder().data(new LinkedHashMap<>()).build());
 
     assertThat(formValidationResponseDto.isValid()).isTrue();
   }
