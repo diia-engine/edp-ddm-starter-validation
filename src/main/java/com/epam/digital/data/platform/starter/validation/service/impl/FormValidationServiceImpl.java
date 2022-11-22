@@ -32,7 +32,8 @@ public class FormValidationServiceImpl implements FormValidationService {
   private final FormValidationClient client;
 
   @Override
-  public FormValidationResponseDto validateForm(String formId, FormDataValidationDto formDataValidationDto) {
+  public FormValidationResponseDto validateForm(String formId, FormDataDto formDataDto) {
+    var formDataValidationDto = FormDataValidationDto.builder().data(formDataDto.getData()).build();
     try {
       client.validateFormData(formId, formDataValidationDto);
       return FormValidationResponseDto.builder().isValid(true).build();

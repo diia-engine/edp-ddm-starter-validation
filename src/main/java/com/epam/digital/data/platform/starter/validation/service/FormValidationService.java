@@ -16,8 +16,8 @@
 
 package com.epam.digital.data.platform.starter.validation.service;
 
-import com.epam.digital.data.platform.integration.formprovider.dto.FormDataValidationDto;
 import com.epam.digital.data.platform.starter.validation.dto.FormValidationResponseDto;
+import com.epam.digital.data.platform.storage.form.dto.FormDataDto;
 
 /**
  * The FormValidationService class represents a service that is used for form data validation.
@@ -28,8 +28,8 @@ public interface FormValidationService {
    * Form data validation method.
    *
    * @param formId      form identifier.
-   * @param formDataValidationDto form data info for validation.
+   * @param formDataDto form data for validation.
    * @return {@link FormValidationResponseDto} entity.
    */
-  FormValidationResponseDto validateForm(String formId, FormDataValidationDto formDataValidationDto);
+  FormValidationResponseDto validateForm(String formId, FormDataDto formDataDto);
 }
