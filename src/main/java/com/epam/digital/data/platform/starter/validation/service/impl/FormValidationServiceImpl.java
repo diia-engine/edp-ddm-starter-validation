@@ -23,6 +23,7 @@ import com.epam.digital.data.platform.starter.validation.dto.FormValidationRespo
 import com.epam.digital.data.platform.starter.validation.service.FormValidationService;
 import com.epam.digital.data.platform.storage.form.dto.FormDataDto;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -38,7 +39,9 @@ public class FormValidationServiceImpl implements FormValidationService {
       client.validateFormData(formId, formDataValidationDto);
       return FormValidationResponseDto.builder().isValid(true).build();
     } catch (SubmissionValidationException ex) {
-      return FormValidationResponseDto.builder().isValid(false).error(ex.getErrors()).build();
+      var errors = ex.getErrors();
+      errors.setTraceId(MDC.get("X-B3-TraceId"));
+      return FormValidationResponseDto.builder().isValid(false).error(errors).build();
     }
   }
 }
